@@ -1,0 +1,144 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+import flet as ft
+
+from components.botones import crear_boton_principal
+from components.campos import crear_campo_texto
+from components.secciones import (
+    crear_aviso_informativo,
+    crear_panel_destacado,
+    crear_tarjeta_contenido,
+)
+
+if TYPE_CHECKING:
+    from app.router import Router
+    from app.state import AppState
+
+
+def construir_vista_inicio_sesion(enrutador: "Router", estado: "AppState") -> ft.View:
+    """Genera la vista de autenticación principal."""
+
+    campo_usuario = crear_campo_texto(
+        "Usuario",
+        "Ingresa tu usuario",
+        ft.Icons.PERSON,
+        autofoco=True,
+    )
+    campo_contrasena = crear_campo_texto(
+        "Contraseña",
+        "Ingresa tu contraseña",
+        ft.Icons.LOCK,
+        es_password=True,
+    )
+
+    def manejar_envio(_: ft.ControlEvent) -> None:
+        usuario = (campo_usuario.value or "").strip()
+        contrasena = campo_contrasena.value or ""
+
+        if not usuario or not contrasena:
+            estado.notify("Por favor completa usuario y contraseña.", kind="error")
+            return
+
+        registro = estado.db.authenticate_user(usuario, contrasena)
+        if not registro:
+            estado.notify("Credenciales incorrectas.", kind="error")
+            return
+
+        estado.set_session(registro.username, registro.full_name)
+        estado.notify("Bienvenido al sistema bibliotecario.", kind="success")
+        enrutador.replace("/dashboard")
+
+    boton_acceder = crear_boton_principal(
+        "Iniciar sesión",
+        ft.Icons.LOGIN,
+        evento=manejar_envio,
+    )
+
+    tarjeta_formulario = crear_tarjeta_contenido(
+        controles=[
+            _construir_encabezado_tarjeta(),
+            ft.Divider(height=32, color=ft.colors.TRANSPARENT),
+            campo_usuario,
+            campo_contrasena,
+            ft.Divider(height=16, color=ft.colors.TRANSPARENT),
+            boton_acceder,
+            crear_aviso_informativo(
+                icono="💡",
+                titulo="Credenciales de demostración",
+                descripcion="Usuario: admin\nContraseña: admin123",
+            ),
+        ]
+    )
+
+    panel_formulario = ft.Container(
+        expand=True,
+        padding=ft.padding.symmetric(horizontal=24),
+        alignment=ft.alignment.center,
+        content=ft.Column(
+            width=420,
+            controls=[tarjeta_formulario],
+            alignment=ft.MainAxisAlignment.CENTER,
+            horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
+        ),
+    )
+
+    panel_destacado = crear_panel_destacado(
+        titulo="Sistema de Gestión Bibliotecaria",
+        icono="📚",
+        caracteristicas=_obtener_caracteristicas_destacadas(),
+    )
+
+    contenedor_principal = ft.Row(
+        controls=[panel_formulario, panel_destacado],
+        spacing=0,
+        expand=True,
+    )
+
+    return ft.View(
+        route="/",
+        controls=[contenedor_principal],
+        bgcolor=ft.colors.BLUE_GREY_50,
+        padding=0,
+        horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
+    )
+
+
+def _construir_encabezado_tarjeta() -> ft.Column:
+    """Cabecera reutilizable para tarjetas de autenticación."""
+    return ft.Column(
+        controls=[
+            ft.Container(
+                width=64,
+                height=64,
+                bgcolor=ft.colors.with_opacity(0.1, ft.colors.BLUE_900),
+                border_radius=18,
+                alignment=ft.alignment.center,
+                content=ft.Text("📚", size=32),
+            ),
+            ft.Text(
+                "Biblioteca Central",
+                size=24,
+                weight=ft.FontWeight.BOLD,
+                color=ft.colors.BLUE_900,
+            ),
+            ft.Text(
+                "Iniciar Sesión",
+                size=16,
+                color=ft.colors.BLUE_GREY_600,
+            ),
+        ],
+        spacing=8,
+        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+    )
+
+
+def _obtener_caracteristicas_destacadas() -> list[tuple[str, str]]:
+    """Listado de características visibles en el panel informativo."""
+    return [
+        ("📦", "Gestión de inventario"),
+        ("📋", "Control de préstamos"),
+        ("↩️", "Seguimiento de devoluciones"),
+        ("📊", "Reportes automáticos"),
+    ]
