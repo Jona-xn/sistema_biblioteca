@@ -11,6 +11,8 @@ from components.secciones import (
     crear_panel_destacado,
     crear_tarjeta_contenido,
 )
+from components.validaciones import validar_credenciales
+from data.crud_admin import validar_credenciales_admin
 
 if TYPE_CHECKING:
     from app.router import Router
@@ -34,19 +36,25 @@ def construir_vista_inicio_sesion(enrutador: "Router", estado: "AppState") -> ft
     )
 
     def manejar_envio(_: ft.ControlEvent) -> None:
+        if getattr(estado, "es_vista_previa", False):
+            if hasattr(estado, "notify"):
+                estado.notify("Vista previa: la acción del botón está deshabilitada.", kind="info")
+            return
+
         usuario = (campo_usuario.value or "").strip()
         contrasena = campo_contrasena.value or ""
 
-        if not usuario or not contrasena:
-            estado.notify("Por favor completa usuario y contraseña.", kind="error")
+        es_valido, errores = validar_credenciales(usuario, contrasena)
+        if not es_valido:
+            estado.notify(errores[0], kind="error")
             return
 
-        registro = estado.db.authenticate_user(usuario, contrasena)
-        if not registro:
+        registro = validar_credenciales_admin(usuario, contrasena)
+        if registro is None:
             estado.notify("Credenciales incorrectas.", kind="error")
             return
 
-        estado.set_session(registro.username, registro.full_name)
+        estado.set_session(registro["usuario"], registro.get("usuario"))
         estado.notify("Bienvenido al sistema bibliotecario.", kind="success")
         enrutador.replace("/dashboard")
 

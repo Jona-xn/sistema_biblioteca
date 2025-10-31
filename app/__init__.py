@@ -55,11 +55,16 @@ def _ensure_icons_compat() -> None:
 
 _ensure_icons_compat()
 
+<<<<<<< HEAD
 try:
     from .state import AppState
     from .router import Router
 except ImportError:
     AppState = None  # type: ignore[assignment]
     Router = None  # type: ignore[assignment]
+=======
+from .state import AppState
+from .router import Router
+>>>>>>> 5c98fc46a227f37a1229f81e2a08f6e4dd63f5ea
 
 __all__ = ["AppState", "Router"]
