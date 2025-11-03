@@ -7,6 +7,7 @@ import flet as ft
 
 from models import Item, LoanRequestItem
 
+from components.scroll_area import ScrollArea
 from data.crud_inventario import listar_articulos_disponibles
 from data.crud_prestamo import crear_prestamo
 
@@ -145,7 +146,11 @@ class LoanSection(ft.Container):
         )
 
         layout = self._build_layout()
-        super().__init__(expand=True, bgcolor=ft.colors.BLUE_GREY_50, padding=20, content=layout)
+        scrollable = ScrollArea(
+            content=layout,
+            padding=ft.padding.symmetric(horizontal=20, vertical=20),
+        )
+        super().__init__(expand=True, bgcolor=ft.colors.BLUE_GREY_50, content=scrollable)
         self._load_available_items()
 
     # ------------------------------------------------------------------ #
@@ -230,13 +235,13 @@ class LoanSection(ft.Container):
             ),
         )
 
-        filters_row = ft.Row(
+        filters_row = ft.ResponsiveRow(
             controls=[
-                self.search_field,
-                ft.Container(width=12),
-                self.category_filter,
+                ft.Container(content=self.search_field, col={"xs": 12, "md": 8}),
+                ft.Container(content=self.category_filter, col={"xs": 12, "md": 4}),
             ],
-            spacing=0,
+            spacing=12,
+            run_spacing=12,
             vertical_alignment=ft.CrossAxisAlignment.END,
         )
 
@@ -293,7 +298,6 @@ class LoanSection(ft.Container):
         )
 
         selected_panel = ft.Container(
-            width=320,
             bgcolor=ft.colors.WHITE,
             padding=24,
             border_radius=18,
@@ -338,10 +342,14 @@ class LoanSection(ft.Container):
             ),
         )
 
-        return ft.Row(
-            controls=[left_column, selected_panel],
-            expand=True,
+        left_container = ft.Container(content=left_column)
+        left_container.col = {"xs": 12, "lg": 7}
+        selected_panel.col = {"xs": 12, "lg": 5}
+
+        return ft.ResponsiveRow(
+            controls=[left_container, selected_panel],
             spacing=20,
+            run_spacing=24,
             vertical_alignment=ft.CrossAxisAlignment.START,
         )
 
@@ -540,3 +548,4 @@ class LoanSection(ft.Container):
     def _safe_update(self, control: ft.Control) -> None:
         if getattr(control, "page", None):
             control.update()
+
