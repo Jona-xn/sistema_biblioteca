@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import subprocess
+import sys
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import flet as ft
@@ -58,6 +61,21 @@ def construir_vista_inicio_sesion(enrutador: "Router", estado: "AppState") -> ft
         estado.notify("Bienvenido al sistema bibliotecario.", kind="success")
         enrutador.replace("/dashboard")
 
+    def manejar_recuperacion(_: ft.ControlEvent) -> None:
+        script_path = Path(__file__).resolve().parents[1] / "scripts" / "mostrar_credenciales.py"
+        if not script_path.exists():
+            estado.notify("El script de recuperación no está disponible.", kind="error")
+            return
+
+        try:
+            if sys.platform.startswith("win"):
+                flags = getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
+                subprocess.Popen([sys.executable, str(script_path)], creationflags=flags)
+            else:
+                subprocess.Popen([sys.executable, str(script_path)])
+        except OSError as exc:
+            estado.notify(f"No se pudo ejecutar el script: {exc}", kind="error")
+
     boton_acceder = crear_boton_principal(
         "Iniciar sesión",
         ft.Icons.LOGIN,
@@ -72,6 +90,12 @@ def construir_vista_inicio_sesion(enrutador: "Router", estado: "AppState") -> ft
             campo_contrasena,
             ft.Divider(height=16, color=ft.colors.TRANSPARENT),
             boton_acceder,
+            ft.TextButton(
+                "Recuperar contraseña",
+                icon=ft.Icons.KEY,
+                style=ft.ButtonStyle(color={ft.ControlState.DEFAULT: ft.colors.BLUE_600}),
+                on_click=manejar_recuperacion,
+            ),
             crear_aviso_informativo(
                 icono="💡",
                 titulo="Credenciales de demostración",
