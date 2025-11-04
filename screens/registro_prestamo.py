@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import date, time, timedelta
 from typing import Dict, List, TYPE_CHECKING
 
 import flet as ft
 
 from models import Item, LoanRequestItem
 
+from components.date_time_field import DateInput, TimeInput
 from components.scroll_area import ScrollArea
 from data.crud_inventario import listar_articulos_disponibles
 from data.crud_prestamo import crear_prestamo
@@ -35,29 +36,26 @@ class LoanSection(ft.Container):
             prefix_icon=ft.Icons.PERSON,
             autofocus=True,
         )
-        self.loan_date_field = ft.TextField(
+        default_time = time(hour=10, minute=0)
+        self.loan_date_field = DateInput(
             label="Fecha de Préstamo",
-            value=today.strftime("%Y-%m-%d"),
-            border_radius=12,
-            prefix_icon=ft.Icons.EVENT,
+            icon=ft.Icons.EVENT,
+            initial_date=today,
         )
-        self.loan_time_field = ft.TextField(
+        self.loan_time_field = TimeInput(
             label="Hora de Préstamo",
-            value="10:00",
-            border_radius=12,
-            prefix_icon=ft.Icons.SCHEDULE,
+            icon=ft.Icons.SCHEDULE,
+            initial_time=default_time,
         )
-        self.return_date_field = ft.TextField(
+        self.return_date_field = DateInput(
             label="Fecha de Devolución",
-            value=tomorrow.strftime("%Y-%m-%d"),
-            border_radius=12,
-            prefix_icon=ft.Icons.EVENT_AVAILABLE,
+            icon=ft.Icons.EVENT_AVAILABLE,
+            initial_date=tomorrow,
         )
-        self.return_time_field = ft.TextField(
+        self.return_time_field = TimeInput(
             label="Hora de Devolución",
-            value="10:00",
-            border_radius=12,
-            prefix_icon=ft.Icons.SCHEDULE,
+            icon=ft.Icons.SCHEDULE,
+            initial_time=default_time,
         )
 
         self.search_field = ft.TextField(
